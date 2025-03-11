@@ -1,0 +1,11 @@
+class SchoolBST {
+private:
+    struct TreeNode {
+        School school;
+        TreeNode* left;
+        TreeNode* right;
+        
+        TreeNode(School s) : school(s), left(nullptr), right(nullptr) {}
+    };
+
+    TreeNode* root;
