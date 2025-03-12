@@ -9,3 +9,76 @@ private:
     };
 
     TreeNode* root;
+  TreeNode* insert(TreeNode* node, School s) {
+        if (!node) return new TreeNode(s);
+        
+        if (s.name < node->school.name)
+            node->left = insert(node->left, s);
+        else if (s.name > node->school.name)
+            node->right = insert(node->right, s);
+
+        return node;
+    }
+
+    TreeNode* findByName(TreeNode* node, string name) {
+        if (!node || node->school.name == name)
+            return node;
+
+        if (name < node->school.name)
+            return findByName(node->left, name);
+        else
+            return findByName(node->right, name);
+    }
+ TreeNode* deleteByName(TreeNode* node, string name) {
+        if (!node) return nullptr;
+
+        if (name < node->school.name) {
+            node->left = deleteByName(node->left, name);
+        } else if (name > node->school.name) {
+            node->right = deleteByName(node->right, name);
+        } else {
+            if (!node->left && !node->right) {
+                delete node;
+                return nullptr;
+            }
+            if (!node->left) {
+                TreeNode* temp = node->right;
+                delete node;
+                return temp;
+            } else if (!node->right) {
+                TreeNode* temp = node->left;
+                delete node;
+                return temp;
+            }
+            TreeNode* temp = findMin(node->right);
+            node->school = temp->school;
+            node->right = deleteByName(node->right, temp->school.name);
+        }
+        return node;
+    }
+
+    void inOrder(TreeNode* node) {
+        if (node) {
+            inOrder(node->left);
+            cout << node->school.name << " (" << node->school.city << ", " << node->school.students << " students)" << endl;
+            inOrder(node->right);
+        }
+    }
+
+public:
+    SchoolBST() : root(nullptr) {}
+
+    void insert(School s) { root = insert(root, s); }
+
+    void deleteByName(string name) { root = deleteByName(root, name); }
+
+    void findByName(string name) {
+        TreeNode* result = findByName(root, name);
+        if (result)
+            cout << "Found: " << result->school.name << " in " << result->school.city << " with " << result->school.students << " students." << endl;
+        else
+            cout << "School not found." << endl;
+    }
+
+    void displayInOrder() { inOrder(root); }
+};
