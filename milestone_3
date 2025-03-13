@@ -1,46 +1,60 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+using namespace std;
+
+// School struct to store school details(since I left milestone 2 in another repository)
+struct School {
+    string name;
+    string city;
+    int students;
+    School(string n, string c, int s) : name(n), city(c), students(s) {}
+};
+
+struct TreeNode {
+    School school;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(School s) : school(s), left(nullptr), right(nullptr) {}
+};
+
+// Binary Search Tree class
 class SchoolBST {
 private:
-    struct TreeNode {
-        School school;
-        TreeNode* left;
-        TreeNode* right;
-        
-        TreeNode(School s) : school(s), left(nullptr), right(nullptr) {}
-    };
-
     TreeNode* root;
-  TreeNode* insert(TreeNode* node, School s) {
-        if (!node) return new TreeNode(s);
-        
-        if (s.name < node->school.name)
-            node->left = insert(node->left, s);
-        else if (s.name > node->school.name)
-            node->right = insert(node->right, s);
 
+    // Helper function for insertion
+    TreeNode* insert(TreeNode* node, School school) {
+        if (!node) return new TreeNode(school);
+        if (school.name < node->school.name)
+            node->left = insert(node->left, school);
+        else
+            node->right = insert(node->right, school);
         return node;
     }
 
-    TreeNode* findByName(TreeNode* node, string name) {
-        if (!node || node->school.name == name)
-            return node;
-
+    TreeNode* search(TreeNode* node, string name) {
+        if (!node || node->school.name == name) return node;
         if (name < node->school.name)
-            return findByName(node->left, name);
-        else
-            return findByName(node->right, name);
+            return search(node->left, name);
+        return search(node->right, name);
     }
- TreeNode* deleteByName(TreeNode* node, string name) {
-        if (!node) return nullptr;
 
-        if (name < node->school.name) {
-            node->left = deleteByName(node->left, name);
-        } else if (name > node->school.name) {
-            node->right = deleteByName(node->right, name);
-        } else {
-            if (!node->left && !node->right) {
-                delete node;
-                return nullptr;
-            }
+    // Helper function for in-order successor
+    TreeNode* findMin(TreeNode* node) {
+        while (node && node->left)
+            node = node->left;
+        return node;
+    }
+
+    TreeNode* deleteNode(TreeNode* node, string name) {
+        if (!node) return node;
+        if (name < node->school.name)
+            node->left = deleteNode(node->left, name);
+        else if (name > node->school.name)
+            node->right = deleteNode(node->right, name);
+        else {
             if (!node->left) {
                 TreeNode* temp = node->right;
                 delete node;
@@ -52,33 +66,71 @@ private:
             }
             TreeNode* temp = findMin(node->right);
             node->school = temp->school;
-            node->right = deleteByName(node->right, temp->school.name);
+            node->right = deleteNode(node->right, temp->school.name);
         }
         return node;
     }
 
+    // Helper function for in-order traversal
     void inOrder(TreeNode* node) {
-        if (node) {
-            inOrder(node->left);
-            cout << node->school.name << " (" << node->school.city << ", " << node->school.students << " students)" << endl;
-            inOrder(node->right);
-        }
+        if (!node) return;
+        inOrder(node->left);
+        cout << node->school.name << " - " << node->school.city << " - " << node->school.students << " students" << endl;
+        inOrder(node->right);
     }
 
 public:
     SchoolBST() : root(nullptr) {}
 
-    void insert(School s) { root = insert(root, s); }
+    void insert(School school) { root = insert(root, school); }
 
-    void deleteByName(string name) { root = deleteByName(root, name); }
+    void deleteByName(string name) { root = deleteNode(root, name); }
 
     void findByName(string name) {
-        TreeNode* result = findByName(root, name);
+        TreeNode* result = search(root, name);
         if (result)
-            cout << "Found: " << result->school.name << " in " << result->school.city << " with " << result->school.students << " students." << endl;
+            cout << "Found: " << result->school.name << " in " << result->school.city << " with " << result->school.students << " students" << endl;
         else
             cout << "School not found." << endl;
     }
 
     void displayInOrder() { inOrder(root); }
 };
+
+void loadCSV(SchoolBST& bst, const string& filename) {
+    ifstream file(filename);
+    if (!file) {
+        cout << "Error opening file!" << endl;
+        return;
+    }
+    string line, name, city;
+    int students;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        getline(ss, name, ',');
+        getline(ss, city, ',');
+        ss >> students;
+        bst.insert(School(name, city, students));
+    }
+}
+
+int main() {
+    SchoolBST bst;
+    loadCSV(bst, "Illinois_Schools.csv");
+
+    int choice;
+    string name;
+    do {
+        cout << "\nMenu:\n1. Display Schools (In-order)\n2. Search School\n3. Delete School\n4. Exit\nChoice: ";
+        cin >> choice;
+        switch (choice) {
+            case 1: bst.displayInOrder(); break;
+            case 2: cout << "Enter school name: "; cin.ignore(); getline(cin, name); bst.findByName(name); break;
+            case 3: cout << "Enter school name: "; cin.ignore(); getline(cin, name); bst.deleteByName(name); break;
+            case 4: cout << "Exiting...\n"; break;
+            default: cout << "Invalid choice!\n";
+        }
+    } while (choice != 4);
+
+    return 0;
+}
