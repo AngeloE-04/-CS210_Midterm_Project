@@ -1,0 +1,11 @@
+class SchoolHashTable {
+private:
+    struct School {
+        string name;
+        string city;
+        int enrollment;
+        School* next;  
+    };
+    
+    vector<School*> table;
+    int tableSize;
