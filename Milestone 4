@@ -3,7 +3,6 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <iomanip>
 using namespace std;
 
 struct School {
@@ -34,4 +33,32 @@ private:
 public:
     SchoolHashTable(int size) : tableSize(size) {
         table.resize(tableSize, nullptr);
+    }
+void insert(string name, string address, string city, string state, string county) {
+        int index = hashFunction(name);
+        School* newSchool = new School(name, address, city, state, county);
+        newSchool->next = table[index];
+        table[index] = newSchool;
+    }
+
+    void deleteByName(string name) {
+        int index = hashFunction(name);
+        School* curr = table[index];
+        School* prev = nullptr;
+
+        while (curr != nullptr) {
+            if (curr->name == name) {
+                if (prev == nullptr) {
+                    table[index] = curr->next;
+                } else {
+                    prev->next = curr->next;
+                }
+                delete curr;
+                cout << "Deleted school: " << name << endl;
+                return;
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+        cout << "School not found: " << name << endl;
     }
