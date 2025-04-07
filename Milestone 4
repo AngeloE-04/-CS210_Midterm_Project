@@ -1,0 +1,37 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+using namespace std;
+
+struct School {
+    string name;
+    string address;
+    string city;
+    string state;
+    string county;
+    School* next;
+
+    School(string n, string a, string c, string s, string co)
+        : name(n), address(a), city(c), state(s), county(co), next(nullptr) {}
+};
+
+class SchoolHashTable {
+private:
+    vector<School*> table;
+    int tableSize;
+
+    int hashFunction(string key) {
+        unsigned long hash = 0;
+        for (char ch : key) {
+            hash = (hash * 31 + ch) % tableSize;
+        }
+        return hash % tableSize;
+    }
+
+public:
+    SchoolHashTable(int size) : tableSize(size) {
+        table.resize(tableSize, nullptr);
+    }
