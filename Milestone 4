@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+
 using namespace std;
 
 struct School {
@@ -34,7 +35,8 @@ public:
     SchoolHashTable(int size) : tableSize(size) {
         table.resize(tableSize, nullptr);
     }
-void insert(string name, string address, string city, string state, string county) {
+
+    void insert(string name, string address, string city, string state, string county) {
         int index = hashFunction(name);
         School* newSchool = new School(name, address, city, state, county);
         newSchool->next = table[index];
@@ -62,7 +64,8 @@ void insert(string name, string address, string city, string state, string count
         }
         cout << "School not found: " << name << endl;
     }
- School* findByName(string name) {
+
+    School* findByName(string name) {
         int index = hashFunction(name);
         School* curr = table[index];
         while (curr != nullptr) {
@@ -103,9 +106,15 @@ void loadCSV(string filename, SchoolHashTable& table) {
 }
 
 int main() {
-    SchoolHashTable table(1);
+    int rows=1;
+    ifstream file("Illinois_Schools.csv");
+    string line;
+    while (getline(file, line))
+        rows++;
+    SchoolHashTable table(rows);
 
     string filename = "Illinois_Schools.csv";
+
     loadCSV(filename, table);
 
     int choice;
