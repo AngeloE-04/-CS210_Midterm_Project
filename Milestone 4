@@ -62,3 +62,86 @@ void insert(string name, string address, string city, string state, string count
         }
         cout << "School not found: " << name << endl;
     }
+ School* findByName(string name) {
+        int index = hashFunction(name);
+        School* curr = table[index];
+        while (curr != nullptr) {
+            if (curr->name == name) return curr;
+            curr = curr->next;
+        }
+        return nullptr;
+    }
+
+    void display() {
+        for (int i = 0; i < tableSize; ++i) {
+            School* curr = table[i];
+            if (curr == nullptr) continue;
+            cout << "Index " << i << ":\n";
+            while (curr != nullptr) {
+                cout << "  -> " << curr->name << ", " << curr->address << ", " << curr->city
+                     << ", " << curr->state << ", " << curr->county << endl;
+                curr = curr->next;
+            }
+        }
+    }
+};
+
+void loadCSV(string filename, SchoolHashTable& table) {
+    ifstream file(filename);
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string name, address, city, state, county;
+        getline(ss, name, ',');
+        getline(ss, address, ',');
+        getline(ss, city, ',');
+        getline(ss, state, ',');
+        getline(ss, county);
+        table.insert(name, address, city, state, county);
+    }
+    file.close();
+}
+
+int main() {
+    SchoolHashTable table(1);
+
+    string filename = "Illinois_Schools.csv";
+    loadCSV(filename, table);
+
+    int choice;
+    string name;
+
+    do {
+        cout << "\nMenu:\n1. Search\n2. Delete\n3. Display\n4. Exit\nEnter choice: ";
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice) {
+            case 1:
+                cout << "Enter school name to search: ";
+                getline(cin, name);
+                if (School* s = table.findByName(name)) {
+                    cout << "Found: " << s->name << ", " << s->address << ", "
+                         << s->city << ", " << s->state << ", " << s->county << endl;
+                } else {
+                    cout << "School not found.\n";
+                }
+                break;
+            case 2:
+                cout << "Enter school name to delete: ";
+                getline(cin, name);
+                table.deleteByName(name);
+                break;
+            case 3:
+                table.display();
+                break;
+            case 4:
+                cout << "Exiting.\n";
+                break;
+            default:
+                cout << "Invalid choice.\n";
+        }
+    } while (choice != 4);
+
+    return 0;
+}
