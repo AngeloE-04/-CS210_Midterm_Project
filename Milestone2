@@ -1,0 +1,111 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+using namespace std;
+//added in school structure Feb 17
+struct School {
+    string name, address, city, state, county;
+    School* next;
+    School(string n, string a, string c, string s, string co)
+        : name(n), address(a), city(c), state(s), county(co), next(nullptr) {}
+};
+
+class SchoolList {
+private:
+    School* head;
+public:
+    SchoolList() : head(nullptr) {}
+//insert first/last first added on Feb 20th
+    void insertFirst(const School& school) {
+        School* newSchool = new School(school);
+        newSchool->next = head;
+        head = newSchool;
+    }
+
+    void insertLast(const School& school) {
+        School* newSchool = new School(school);
+        if (!head) {
+            head = newSchool;
+            return;
+        }
+        School* temp = head;
+        while (temp->next) temp = temp->next;
+        temp->next = newSchool;
+    }
+//Method added on Feb 23rd
+    void deleteByName(const string& name) {
+        School* temp = head, *prev = nullptr;
+        while (temp && temp->name != name) {
+            prev = temp;
+            temp = temp->next;
+        }
+        if (!temp) return;
+        if (!prev) head = temp->next;
+        else prev->next = temp->next;
+        delete temp;
+    }
+
+    School* findByName(const string& name) {
+        School* temp = head;
+        while (temp) {
+            if (temp->name == name) return temp;
+            temp = temp->next;
+        }
+        return nullptr;
+    }
+
+    void display() {
+        School* temp = head;
+        while (temp) {
+            cout << temp->name << ", " << temp->address << ", " << temp->city
+                 << ", " << temp->state << ", " << temp->county << endl;
+            temp = temp->next;
+        }
+    }
+};
+//Copied over on the Feb 17th from Github
+class CSVReader {
+public:
+    static vector<vector<string>> readCSV(const string& filename) {
+        ifstream file(filename);
+        vector<vector<string>> data;
+        string line, word;
+
+        if (!file.is_open()) {
+            cerr << "Error: Could not open file " << filename << endl;
+            return data;
+        }
+
+        while (getline(file, line)) {
+            stringstream ss(line);
+            vector<string> row;
+            while (getline(ss, word, ',')) {
+                row.push_back(word);
+            }
+            data.push_back(row);
+        }
+        file.close();
+        return data;
+    }
+};
+//Main finished on Feb 25th along with testing
+int main() {
+    SchoolList schoolList;
+    //for testing I used some chatGpt to get a list of schools with all their info(Feb 25)
+    vector<vector<string>> data = CSVReader::readCSV("Schools.csv");
+
+    for (size_t i = 1; i < data.size(); i++) {
+        schoolList.insertFirst(School(data[i][0], data[i][1], data[i][2], data[i][3], data[i][4]));
+
+
+    }
+    schoolList.display();
+    schoolList.deleteByName("LINCOLN ELEMENTARY SCHOOL");
+       schoolList.deleteByName(" KELLAR PRIMARY SCHOOL");
+    cout << endl;
+    cout << "List with deleted schools" ;
+    schoolList.display();
+
+    return 0;
+}
