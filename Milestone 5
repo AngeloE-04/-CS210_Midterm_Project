@@ -1,0 +1,235 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <chrono>
+using namespace std;
+
+// All Structs
+struct School {
+    string name, address, city, state, county;
+    School* next;
+    School(string n, string a, string c, string s, string co)
+        : name(n), address(a), city(c), state(s), county(co), next(nullptr) {}
+};
+
+struct TreeNode {
+    School school;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(School s) : school(s), left(nullptr), right(nullptr) {}
+};
+
+//Linked list
+class SchoolList {
+private:
+    School* head;
+public:
+    SchoolList() : head(nullptr) {}
+
+    void insert(const string& name) {
+        School* newSchool = new School(name, "", "", "", "");
+        newSchool->next = head;
+        head = newSchool;
+    }
+
+    School* findByName(const string& name) {
+        School* temp = head;
+        while (temp) {
+            if (temp->name == name) return temp;
+            temp = temp->next;
+        }
+        return nullptr;
+    }
+
+    void deleteByName(const string& name) {
+        School* temp = head, *prev = nullptr;
+        while (temp && temp->name != name) {
+            prev = temp;
+            temp = temp->next;
+        }
+        if (!temp) return;
+        if (!prev) head = temp->next;
+        else prev->next = temp->next;
+        delete temp;
+    }
+};
+
+// BST
+class SchoolBST {
+private:
+    TreeNode* root;
+
+    TreeNode* insert(TreeNode* node, const string& name) {
+        if (!node) return new TreeNode(School(name, "", "", "", ""));
+        if (name < node->school.name)
+            node->left = insert(node->left, name);
+        else
+            node->right = insert(node->right, name);
+        return node;
+    }
+
+    TreeNode* search(TreeNode* node, const string& name) {
+        if (!node || node->school.name == name) return node;
+        if (name < node->school.name)
+            return search(node->left, name);
+        return search(node->right, name);
+    }
+
+    TreeNode* findMin(TreeNode* node) {
+        while (node && node->left)
+            node = node->left;
+        return node;
+    }
+
+    TreeNode* deleteNode(TreeNode* node, const string& name) {
+        if (!node) return nullptr;
+        if (name < node->school.name)
+            node->left = deleteNode(node->left, name);
+        else if (name > node->school.name)
+            node->right = deleteNode(node->right, name);
+        else {
+            if (!node->left) {
+                TreeNode* temp = node->right;
+                delete node;
+                return temp;
+            } else if (!node->right) {
+                TreeNode* temp = node->left;
+                delete node;
+                return temp;
+            }
+            TreeNode* temp = findMin(node->right);
+            node->school = temp->school;
+            node->right = deleteNode(node->right, temp->school.name);
+        }
+        return node;
+    }
+
+public:
+    SchoolBST() : root(nullptr) {}
+
+    void insert(const string& name) {
+        root = insert(root, name);
+    }
+
+    School* findByName(const string& name) {
+        TreeNode* result = search(root, name);
+        return result ? &result->school : nullptr;
+    }
+
+    void deleteByName(const string& name) {
+        root = deleteNode(root, name);
+    }
+};
+
+//Hash table
+class SchoolHashTable {
+private:
+    vector<School*> table;
+    int tableSize;
+
+    int hashFunction(const string& key) {
+        unsigned long hash = 0;
+        for (char ch : key) {
+            hash = (hash * 31 + ch) % tableSize;
+        }
+        return hash % tableSize;
+    }
+
+public:
+    SchoolHashTable(int size) : tableSize(size) {
+        table.resize(tableSize, nullptr);
+    }
+
+    void insert(const string& name) {
+        int index = hashFunction(name);
+        School* newSchool = new School(name, "", "", "", "");
+        newSchool->next = table[index];
+        table[index] = newSchool;
+    }
+
+    School* findByName(const string& name) {
+        int index = hashFunction(name);
+        School* curr = table[index];
+        while (curr != nullptr) {
+            if (curr->name == name) return curr;
+            curr = curr->next;
+        }
+        return nullptr;
+    }
+
+    void deleteByName(const string& name) {
+        int index = hashFunction(name);
+        School* curr = table[index], *prev = nullptr;
+        while (curr) {
+            if (curr->name == name) {
+                if (!prev) table[index] = curr->next;
+                else prev->next = curr->next;
+                delete curr;
+                return;
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+};
+
+//Testing
+class SchoolDataTester {
+private:
+    vector<string> schoolNames;
+
+public:
+    void loadCSV(const string& filename) {
+        ifstream file(filename);
+        string line;
+        while (getline(file, line)) {
+            if (!line.empty())
+                schoolNames.push_back(line);
+        }
+    }
+
+    template<typename Structure>
+    void testStructure(const string& name, Structure& structure) {
+        using namespace chrono;
+        cout << "\nTesting " << name << endl;
+
+        // Insert
+        auto startInsert = high_resolution_clock::now();
+        for (const auto& s : schoolNames) structure.insert(s);
+        auto endInsert = high_resolution_clock::now();
+        auto insertTime = duration_cast<microseconds>(endInsert - startInsert).count();
+        cout << "Insert time: " << insertTime << " microsec" << endl;
+
+        // Search
+        auto startSearch = high_resolution_clock::now();
+        for (const auto& s : schoolNames) structure.findByName(s);
+        auto endSearch = high_resolution_clock::now();
+        auto searchTime = duration_cast<microseconds>(endSearch - startSearch).count();
+        cout << "Search time: " << searchTime << " microsec" << endl;
+
+        // Delete
+        auto startDelete = high_resolution_clock::now();
+        for (const auto& s : schoolNames) structure.deleteByName(s);
+        auto endDelete = high_resolution_clock::now();
+        auto deleteTime = duration_cast<microseconds>(endInsert - startInsert).count();
+        cout << "Delete time: " << deleteTime << " microsec" << endl;
+    }
+};
+
+
+int main() {
+    SchoolDataTester tester;
+    tester.loadCSV("Illinois_Peoria_Schools.csv");
+
+    SchoolList ll;
+    SchoolBST bst;
+    SchoolHashTable ht(10007);
+
+    tester.testStructure("Linked List", ll);
+    tester.testStructure("Binary Search Tree", bst);
+    tester.testStructure("Hash Table", ht);
+
+    return 0;
+}
